@@ -89,3 +89,59 @@ Proof.
 		exact H3.
 Qed.
 
+Fixpoint add n m := match n with 0 => m | S p => add p (S m) end.
+
+Theorem example_add1 : forall n m, add n (S m) = S (add n m).
+
+Proof.
+	intros n.
+	induction n.
+	simpl.
+	reflexivity.
+	simpl.
+	intros m.
+	symmetry in IHn.
+	rewrite IHn.
+	reflexivity.
+Qed.
+
+Theorem example_add2 : forall n m, add (S n) m = S (add n m).
+Proof.
+	intros n m.
+	simpl.
+	rewrite example_add1.
+	reflexivity.
+Qed.
+
+Theorem example_add3 : forall n m, add n m = n + m.
+Proof.
+	intros n.
+	induction n.
+	simpl.
+	reflexivity.
+	simpl.
+	intros m.
+	symmetry in IHn.
+	rewrite IHn.
+	rewrite example_add1.
+	reflexivity.
+Qed.
+
+Theorem example_add_comm : forall n m, add n m = add m n.
+Proof.
+	intros n.
+	induction n.
+	simpl.
+	induction m.
+	simpl.
+	reflexivity.
+	rewrite example_add2.
+	symmetry in IHm.
+	rewrite IHm.
+	reflexivity.
+	intros m.
+	simpl.
+	rewrite IHn.
+	simpl.
+	reflexivity.
+Qed.
