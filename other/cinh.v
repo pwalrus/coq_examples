@@ -145,3 +145,23 @@ Proof.
 	simpl.
 	reflexivity.
 Qed.
+
+Require Import Arith.
+
+Fixpoint sum_odd_n (n:nat) : nat
+	:= match n with
+		0 => 0 |
+		S p => 1 + 2 * p + sum_odd_n p
+	end.
+
+Theorem example_sum_odd_n : forall n:nat, sum_odd_n n = n*n.
+Proof.
+	intros n.
+	induction n.
+	simpl.
+	reflexivity.
+	simpl sum_odd_n.
+	rewrite IHn.
+	ring.
+Qed.
+
