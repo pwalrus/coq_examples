@@ -165,3 +165,56 @@ Proof.
 	ring.
 Qed.
 
+Inductive dtd_ex71 : Type :=
+  A : nat -> dtd_ex71
+| B : bool -> dtd_ex71 -> dtd_ex71 -> dtd_ex71
+| C : dtd_ex71 -> dtd_ex71 -> dtd_ex71 -> dtd_ex71 -> dtd_ex71.
+
+Require Import List.
+
+Inductive bin : Type :=
+	L : bin
+	| N : bin -> bin -> bin.
+
+Fixpoint flatten_aux (t1 t2:bin) : bin :=
+match t1 with
+	  L => N L t2
+	| N t'1 t'2 => flatten_aux t'1 (flatten_aux t'2 t2)
+end.
+
+Fixpoint flatten (t:bin) : bin :=
+match t with
+	  L => L
+	| N t1 t2 => flatten_aux t1 (flatten t2)
+end.
+
+Fixpoint size (t:bin) : nat :=
+	match t with
+	  L => 1
+	| N t1 t2 => 1 + size t1 + size t2
+end.
+
+Lemma flatten_aux_size : forall t1 t2, size (flatten_aux t1 t2) = size t1 + size t2 + 1.
+Proof.
+	induction t1.
+	intros t2.
+	simpl.
+	ring.
+	intros t2.
+	simpl.
+	rewrite IHt1_1.
+	rewrite IHt1_2.
+	ring.
+Qed.
+
+Lemma flatten_size : forall t, size (flatten t) = size t.
+Proof.
+	induction t.
+	simpl.
+	reflexivity.
+	simpl.
+	rewrite flatten_aux_size.
+	rewrite IHt2.
+	ring.
+Qed.
+
