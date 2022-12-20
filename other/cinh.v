@@ -218,3 +218,26 @@ Proof.
 	ring.
 Qed.
 
+Definition sum_five (a b c d e : nat) : nat := a + b + c + d + e.
+
+Fixpoint range_list (n : nat) : list nat :=
+	match n with
+	  0 => nil
+	| S x => range_list x ++ x::nil
+	end.
+
+Definition first_two_sorted (lst: list nat) : bool :=
+match lst with
+  nil => true
+| h1::tl1 => match tl1 with
+	  nil => true
+	| h2::tl2 => if h1 <=? h2 then true else false
+	end
+end.
+
+Fixpoint is_sorted (lst : list nat): bool :=
+match lst with
+  nil => true
+| h::t => first_two_sorted (h::t) && is_sorted (t)
+end.
+
