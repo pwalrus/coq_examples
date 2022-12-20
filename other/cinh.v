@@ -241,3 +241,9 @@ match lst with
 | h::t => first_two_sorted (h::t) && is_sorted (t)
 end.
 
+
+Fixpoint count_occ (n : nat) (lst : list nat) : nat :=
+match lst with
+  nil => 0
+| h::t => let c := count_occ n t in if n =? h then c + 1 else c
+end.
