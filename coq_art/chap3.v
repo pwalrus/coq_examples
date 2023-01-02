@@ -32,6 +32,11 @@ Section ex32.
     exact P0.
   Qed.
 
+  Lemma imp_trans_alt : (P -> Q) -> (Q -> R) -> (P -> R).
+  Proof.
+    apply ex31 with (P := P) (Q := Q).
+  Qed.
+
   Lemma imp_perm : (P -> Q -> R) -> (Q -> P -> R).
   Proof.
     intros H0 Q P.
