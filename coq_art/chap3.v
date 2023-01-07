@@ -91,5 +91,27 @@ Section ex32.
   Qed.
 End ex32.
 
+Section section_for_cut_example.
+  Parameters P Q R T : Prop.
+  Hypothesis (H : P -> Q)
+    (H0 : Q -> R)
+    (H1 : (P -> R) -> T -> Q)
+    (H2 : (P -> R) -> T).
 
+  Theorem cut_example : Q.
+  Proof.
+    cut (P -> R).
+    intro H3.
+    apply H1; [exact H3 | apply H2; exact H3].
+    intro H4; apply H0; apply H; exact H4.
+  Qed.
+
+  Theorem cut_example_alt : Q.
+  Proof.
+    apply H1.
+    intro P0; apply H0; apply H; exact P0.
+    apply H2.
+    intro P0; apply H0; apply H; exact P0.
+  Qed.
+End section_for_cut_example.
 
