@@ -267,4 +267,77 @@ Section ex57.
 
 End ex57.
 
+Section ex59.
+
+  Parameters A : Set.
+  Parameters P Q : A -> Prop.
+
+  Theorem disj_exists : (exists x : A, (P x \/ Q x)) -> (ex P) \/ (ex Q).
+  Proof.
+    intro H0.
+    case H0 as [a H1].
+    case H1.
+    intros H2; left; exists a; exact H2.
+    intros H2; right; exists a; exact H2.
+  Qed.
+
+  Theorem disj_exists_rev : (ex P) \/ (ex Q) -> (exists x : A, (P x \/ Q x)).
+  Proof.
+    intro H0.
+    case H0.
+    intros H1; case H1 as [a H2]; exists a; left; exact H2.
+    intros H1; case H1 as [a H2]; exists a; right; exact H2.
+  Qed.
+
+  Definition const_false_prop (x : A) := 2 = 3.
+
+  Theorem magic_elem : (exists x : A, (forall R: A -> Prop, R x)) -> 2 = 3.
+  Proof.
+    intros H0.
+    case H0 as [a H1].
+    apply H1 with (R := const_false_prop).
+  Qed.
+
+  Theorem minor_demorgan : (forall x : A, P x) -> ~(exists y : A, ~P y).
+  Proof.
+    intros H0 H1.
+    case H1 as [a H2].
+    elim H2; apply H0.
+  Qed.
+
+End ex59.
+
+Require Import Arith.
+
+Section ex510.
+  Theorem plus_permute2 : forall n m p : nat, n+m+p = n+p+m.
+  Proof.
+    intros n m p.
+    assert (H0: m + p = p + m).
+    apply plus_comm.
+    assert (H1 : n + (m + p) = n + (p+m)).
+    rewrite H0; reflexivity.
+    assert (H2: forall a b c :nat, a+b+c= a + (b + c)).
+    intros a b c.
+    symmetry.
+    apply plus_assoc.
+    rewrite H2 with (a:=n)(b:=m).
+    rewrite H2 with (a:=n)(b:=p).
+    rewrite H0.
+    reflexivity.
+  Qed.
+End ex510.
+
+Section ex511.
+  Check eq_ind.
+
+  Theorem eq_trans : forall (A: Type)(x y z: A), x = y -> y=z -> x=z.
+  Proof.
+    intros A x y z H0 H1.
+    apply eq_ind with (A:=A) (x:=y) (P:= fun a => x=a) (y:=z).
+    exact H0.
+    exact H1.
+  Qed.
+
+End ex511.
 
