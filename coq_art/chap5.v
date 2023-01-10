@@ -341,3 +341,243 @@ Section ex511.
 
 End ex511.
 
+Section ex512.
+
+  Definition my_True : Prop := forall P:Prop, P -> P.
+  Definition my_False : Prop := forall P:Prop, P.
+
+  Theorem my_I : my_True.
+  Proof (fun (P : Prop) (H0 : P) => H0).
+
+  Theorem my_False_ind : forall P : Prop, my_False -> P.
+  Proof (fun (P : Prop) (H0 : my_False) => H0 P).
+
+End ex512.
+
+Section ex513.
+
+  Definition my_not (P:Prop) : Prop := P->my_False.
+
+  Theorem my_not_false: my_not False.
+  Proof.
+    intros H0 H1.
+    elim H0.
+  Qed.
+
+  Theorem my_triple_neg : forall P: Prop, my_not (my_not (my_not P)) -> my_not P.
+  Proof.
+    intros P H0 H1 H2.
+    apply H0.
+    intro H3.
+    apply H3.
+    exact H1.
+  Qed.
+
+  Theorem triple_contra : forall P Q: Prop, my_not (my_not (my_not P)) -> P -> Q.
+  Proof.
+    intros P Q H0 H1.
+    assert (H2 : my_not P).
+    apply my_triple_neg with (P := P).
+    exact H0.
+    apply H2; exact H1.
+  Qed.
+End ex513.
+
+Require Import Relations.
+
+Section ex514.
+
+  Variable A: Set.
+  Definition leibniz (a b : A) : Prop := forall P: A-> Prop , P a -> P b.
+
+  Theorem leibniz_sym : symmetric A leibniz.
+  Proof.
+    unfold symmetric.
+    intros x y.
+    unfold leibniz.
+    intros H0 P.
+    apply H0; intros H1; exact H1.
+  Qed.
+
+  Theorem leibniz_refl : reflexive A leibniz.
+  Proof.
+    unfold reflexive.
+    intros x.
+    unfold leibniz.
+    intros P H0; exact H0.
+  Qed.
+
+  Theorem leibniz_trans : transitive A leibniz.
+  Proof.
+    unfold transitive.
+    intros x y z H0 H1.
+    apply H1 with (P:=(fun q => leibniz x q)); exact H0.
+  Qed.
+
+  Theorem leibniz_equiv : equiv A leibniz.
+  Proof.
+    unfold equiv.
+    split.
+    apply leibniz_refl.
+    split.
+    apply leibniz_trans.
+    apply leibniz_sym.
+  Qed.
+
+  Theorem leibniz_least_reflexive :
+    forall R: relation A, reflexive A R -> inclusion A leibniz R.
+  Proof.
+    intros R H0.
+    unfold inclusion.
+    intros x y H1.
+    apply H1 with (P:=(fun q => R x q)).
+    apply H0.
+  Qed.
+
+  Theorem leibniz_eq : forall a b : A, leibniz a b -> a = b.
+  Proof.
+    intros a b H0.
+    apply H0 with (P:=fun q => a = q).
+    reflexivity.
+  Qed.
+
+  Theorem eq_leibniz : forall a b : A, a = b -> leibniz a b.
+  Proof.
+    intros a b H0.
+    rewrite H0.
+    apply leibniz_refl.
+  Qed.
+
+  Theorem leibniz_ind : forall(x:A)(P:A->Prop), P x -> forall y : A, leibniz x y -> P y.
+  Proof.
+    intros x P H0 y H1.
+    apply H1 with (P:= fun q => P q).
+    exact H0.
+  Qed.
+
+End ex514.
+
+
+Section ex515.
+
+  Definition my_and (P Q : Prop) : Prop := forall R : Prop, (P -> Q -> R) -> R.
+  Definition my_or (P Q : Prop) : Prop := forall R : Prop, (P -> R) -> (Q -> R) -> R.
+  Definition my_ex (A:Set)(P : A -> Prop) : Prop := forall R : Prop, (forall x : A, P x -> R) -> R.
+
+  Theorem my_l_proj: forall P Q: Prop, my_and P Q -> P.
+  Proof.
+    intros P Q H0.
+    apply H0.
+    intros P0 Q0; exact P0.
+  Qed.
+
+  Theorem my_r_proj: forall P Q: Prop, my_and P Q -> Q.
+  Proof.
+    intros P Q H0.
+    apply H0.
+    intros P0 Q0; exact Q0.
+  Qed.
+
+  Theorem my_and_intro: forall P Q R: Prop, (P -> Q -> R) -> my_and P Q -> R.
+  Proof.
+    intros P Q R H0 H1.
+    apply H0.
+    apply my_l_proj with (Q:=Q); exact H1.
+    apply my_r_proj with (P:=P); exact H1.
+  Qed.
+
+  Theorem my_or_l_intro : forall P Q:Prop, P -> my_or P Q.
+  Proof.
+    intros P Q H0.
+    unfold my_or.
+    intros R H1 H2.
+    apply H1; exact H0.
+  Qed.
+
+  Theorem my_or_r_intro : forall P Q:Prop, Q -> my_or P Q.
+  Proof.
+    intros P Q H0.
+    unfold my_or.
+    intros R H1 H2.
+    apply H2; exact H0.
+  Qed.
+
+  Theorem my_or_elim : forall P Q R: Prop, (P -> R) -> (Q -> R) -> my_or P Q -> R.
+  Proof.
+    intros P Q R H0 H1 H2.
+    apply H2; [exact H0 | exact H1].
+  Qed.
+
+  Theorem false_or_id : forall P : Prop, my_or P my_False -> P.
+  Proof.
+    intros P H0.
+    apply my_or_elim with (P:=P) (Q:=my_False).
+    intros P0; exact P0.
+    intros F0; apply F0.
+    exact H0.
+  Qed.
+
+  Theorem my_or_comm : forall P Q : Prop, my_or P Q -> my_or Q P.
+  Proof.
+    intros P Q H0.
+    apply my_or_elim with (P:=P) (Q:=Q).
+    apply my_or_r_intro.
+    apply my_or_l_intro.
+    exact H0.
+  Qed.
+
+  Theorem my_ex_intro : forall (A : Set)(P: A->Prop)(a:A), P a -> my_ex A P.
+  Proof.
+    intros A P a H0.
+    unfold my_ex.
+    intros R H1.
+    apply H1 with (x:=a); exact H0.
+  Qed.
+
+  Theorem my_demorgan :
+    forall (A:Set)(P:A->Prop), my_not (my_ex A P) -> forall a : A, my_not (P a).
+  Proof.
+    intros A P H0 a.
+    unfold my_not; intros H1.
+    apply H0.
+    apply my_ex_intro with (a:=a); exact H1.
+  Qed.
+
+End ex515.
+
+Section ex516.
+
+  Definition my_le (n p : nat) : Prop :=
+    forall P: nat -> Prop, P n -> (forall q: nat, P q -> P (S q)) -> P p.
+
+  Lemma my_le_n : forall n : nat, my_le n n.
+  Proof.
+    intros n.
+    unfold my_le.
+    intros P H0 H1.
+    exact H0.
+  Qed.
+
+  Lemma my_le_S : forall n p : nat, my_le n p -> my_le n (S p).
+  Proof.
+    intros n p H0.
+    unfold my_le.
+    intros P H1 H2.
+    apply H2.
+    apply H0.
+    exact H1.
+    exact H2.
+  Qed.
+
+  Lemma my_le_le : forall n p : nat, my_le n p -> n <= p.
+  Proof.
+    intros n p H0.
+    apply H0 with (P:= fun x => n <= x).
+    apply le_n.
+    intros q H1.
+    apply le_S.
+    exact H1.
+  Qed.
+
+End ex516.
+
