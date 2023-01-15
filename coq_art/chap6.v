@@ -518,3 +518,236 @@ Section ex626.
 
 End ex626.
 
+Section ex627.
+
+
+  Inductive Z_fbtree : Set :=
+      Z_fleaf : Z_fbtree
+    | Z_fnode : Z -> (bool -> Z_fbtree) -> Z_fbtree.
+
+
+  Fixpoint fzero_present (t : Z_fbtree) : bool :=
+    match t with
+        Z_fleaf => false
+      | Z_fnode z f => if Z.eqb z 0 then true
+          else (fzero_present (f true)) || (fzero_present (f true))
+    end.
+
+End ex627.
+
+Section ex628.
+
+  Fixpoint any_f (n:nat) (f:nat -> bool) :=
+    match n with
+        0 => false
+      | S m => (f m) || any_f m f
+    end.
+
+  Inductive Z_inf_branch_tree : Set :=
+      Z_inf_leaf : Z_inf_branch_tree
+    | Z_inf_node : Z -> (nat -> Z_inf_branch_tree) -> Z_inf_branch_tree.
+
+  Fixpoint zero_in_first_n (n:nat)(t: Z_inf_branch_tree) {struct t} : bool :=
+    match t with
+        Z_inf_leaf => false
+      | Z_inf_node z f => if Z.eqb z 0 then true
+          else any_f n (fun m => zero_in_first_n n (f m))
+    end.
+
+End ex628.
+
+Section ex629.
+
+  Theorem plus_n_0_alt : forall n : nat, n = n + 0.
+  Proof.
+    intros n.
+    elim n.
+    simpl; reflexivity.
+    intros n0 H0.
+    simpl; rewrite <- H0; reflexivity.
+  Qed.
+
+End ex629.
+
+Section ex630.
+
+  Fixpoint f1 (t : Z_btree) : Z_fbtree :=
+    match t with
+        Z_leaf => Z_fleaf
+      | Z_bnode z l r => Z_fnode z (bool_rec (fun x => Z_fbtree) (f1 l) (f1 r))
+    end.
+
+  Fixpoint f2 (t : Z_fbtree) : Z_btree :=
+    match t with
+        Z_fleaf => Z_leaf
+      | Z_fnode z f => Z_bnode z (f2 (f true))  (f2 (f false))
+    end.
+
+  Theorem left_f_inv : forall t : Z_btree, f2 (f1 t) = t.
+  Proof.
+    intros t.
+    elim t.
+    simpl; reflexivity.
+    intros z t0 H0 z1 H1.
+    simpl.
+    rewrite H0; rewrite H1; reflexivity.
+  Qed.
+
+  (*
+  Theorem right_f_inv : forall t : Z_fbtree, f1 (f2 t) = t.
+  Proof.
+    intros t.
+    elim t.
+    simpl; reflexivity.
+    intros z f0 H0.
+    simpl.
+    rewrite H0.
+    rewrite H0.
+    f_equal.
+  Qed.
+  Cannot complete this without extensionality.
+  *)
+
+End ex630.
+
+Section ex631.
+
+  Fixpoint mult2 (n:nat) : nat :=
+    match n with
+        0 => 0
+      | S m => S(S(mult2 m))
+    end.
+
+  Search (_+_).
+
+  Theorem nat_mult2_sum : forall n:nat, (mult2 n) = n + n.
+  Proof.
+    induction n.
+    simpl; reflexivity.
+    simpl.
+    rewrite IHn.
+    rewrite Nat.add_succ_r.
+    reflexivity.
+  Qed.
+
+End ex631.
+
+Section ex632.
+
+  Fixpoint sum_n (n:nat) : nat :=
+    match n with
+        0 => 0
+      | S m => S m + sum_n m
+    end.
+
+  Lemma times_two : forall n:nat, n+n = 2*n.
+  Proof.
+    induction n.
+    simpl;reflexivity.
+    rewrite Nat.add_succ_l.
+    rewrite Nat.add_succ_r.
+    rewrite IHn.
+    simpl.
+    rewrite Nat.add_succ_r.
+    rewrite Nat.add_0_r.
+    reflexivity.
+  Qed.
+
+  Check Nat.add_assoc.
+
+  Theorem sum_n_short : forall n : nat, 2 * sum_n n = (n * n) + n.
+  Proof.
+    induction n.
+    simpl; reflexivity.
+    simpl.
+    rewrite Nat.add_succ_r.
+    rewrite Nat.add_assoc.
+    rewrite Nat.add_assoc.
+    rewrite Nat.add_0_r.
+    assert (H1 : sum_n n + (n + sum_n n) = n + 2* sum_n n).
+    rewrite Nat.add_assoc.
+    rewrite Nat.add_comm with (m:= n) (n:=sum_n n).
+    rewrite <- Nat.add_assoc.
+    rewrite times_two with (n:= sum_n n).
+    reflexivity.
+    assert (H2 : n + sum_n n + n + sum_n n = n + n + 2* sum_n n).
+    rewrite <- Nat.add_assoc.
+    rewrite <- Nat.add_assoc.
+    rewrite H1.
+    rewrite Nat.add_assoc.
+    reflexivity.
+    rewrite H2.
+    rewrite IHn.
+    ring.
+  Qed.
+
+End ex632.
+
+Section ex633.
+  Theorem sum_n_mono : forall n : nat , n <= sum_n n.
+  Proof.
+    induction n.
+    simpl; reflexivity.
+    simpl.
+    rewrite <- Nat.add_succ_l.
+    apply Nat.le_add_r.
+  Qed.
+End ex633.
+
+Require Import List.
+
+
+Section ex634.
+
+  Fixpoint first_two {A} (l: list A) : list A :=
+    match l with
+        nil => nil
+      | cons h0 t0 => (match t0 with nil => (cons h0 nil) | cons h1 t1 => cons h0 (cons h1 nil) end)
+    end.
+
+End ex634.
+
+Section ex635.
+
+  Fixpoint first_n {A} (n:nat) (l: list A) : list A :=
+    match n with
+        0 => nil
+      | S m =>
+        match l with
+            nil => nil
+          | cons h0 t0 => cons h0 (first_n m t0)
+          end
+    end.
+
+End ex635.
+
+Section ex636.
+
+  Fixpoint sum_list (l: list nat) : nat :=
+    match l with
+        nil => 0
+      | cons h0 t0 => h0 + sum_list t0
+    end.
+
+End ex636.
+
+Section ex637.
+
+  Fixpoint n_ones (n: nat) : list nat :=
+    match n with
+        0 => nil
+      | S m => cons 1 (n_ones m)
+    end.
+
+End ex637.
+
+
+Section ex638.
+
+  Fixpoint n_range (n: nat) : list nat :=
+    match n with
+        0 => nil
+      | S m => (n_range m) ++ (cons (S m) nil)
+    end.
+
+End ex638.
