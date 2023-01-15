@@ -751,3 +751,200 @@ Section ex638.
     end.
 
 End ex638.
+
+Section ex639.
+
+  Fixpoint nth_option {A} (n:nat) (l : list A) {struct l} : option A :=
+    match n, l with
+        0, cons a t1 => Some a
+      | S p, cons a t1 => nth_option p t1
+      | _, nil => None
+    end.
+
+  Definition nth_option_alt {A} (n:nat) (l : list A) : option A :=
+    match n, l with
+        0, cons a t1 => Some a
+      | S p, cons a t1 => nth_option p t1
+      | _, nil => None
+    end.
+
+  Lemma nth_same : forall (A:Set) (n:nat)(l: list A), nth_option n l = nth_option_alt n l.
+  Proof.
+    intros A.
+    induction l.
+    induction n.
+    simpl; reflexivity.
+    simpl; reflexivity.
+    induction n.
+    simpl; reflexivity.
+    simpl; reflexivity.
+  Qed.
+
+End ex639.
+
+Require Import Arith.
+
+Section ex640.
+
+  Lemma nth_length :
+    forall (A:Set) (n:nat)(l: list A), (nth_option n l = None) -> length l <= n.
+  Proof.
+    intros A.
+    induction n.
+    induction l.
+    simpl; reflexivity.
+    simpl; intros H1; discriminate H1.
+    induction l.
+    simpl; intros H2; apply Nat.le_0_l.
+    simpl nth_option.
+    intros H3.
+    assert (H4 : length l <= length (a :: l)).
+    induction l.
+    simpl; apply Nat.le_0_l.
+    simpl. apply le_n_S. apply Nat.le_succ_diag_r.
+    assert (H5 : length l <= n -> length (a :: l) <= S n).
+    simpl; apply le_n_S; reflexivity.
+    apply H5.
+    apply IHn.
+    exact H3.
+  Qed.
+
+End ex640.
+
+Section ex641.
+
+  Fixpoint first_true {A}(f: A -> bool)(l: list A) {struct l} : option A :=
+    match l with
+        nil => None
+      | cons h0 t0 => if f h0 then Some h0 else (first_true f t0)
+    end.
+
+End ex641.
+
+Section ex642.
+
+  Fixpoint left_list {A B} (l : list (A * B)) : list A :=
+      match l with
+          nil => nil
+        | cons h0 t0 => (fst h0) :: left_list t0
+      end.
+
+  Fixpoint right_list {A B} (l : list (A * B)) : list B :=
+      match l with
+          nil => nil
+        | cons h0 t0 => (snd h0) :: right_list t0
+      end.
+
+  Definition split {A B} (l : list (A * B)) : list A * list B :=
+    pair (left_list l) (right_list l).
+
+  Fixpoint combine {A B} (l1: list A) (l2 : list B) : list (A * B) :=
+    match l1, l2 with
+        cons h0 t0, cons h1 t1 => (pair h0 h1) :: combine t0 t1
+      | _, _ => nil
+    end.
+
+End ex642.
+
+
+Section ex43.
+
+  Inductive btree (A:Set) : Set :=
+      leaf : btree A
+    | bnode : A -> btree A -> btree A -> btree A.
+
+  Fixpoint z_to_gen (t: Z_btree) : btree Z :=
+    match t with
+        Z_leaf => leaf Z
+      | Z_bnode z l r => bnode Z z (z_to_gen l) (z_to_gen r)
+    end.
+
+  Fixpoint gen_to_z (t: btree Z) : Z_btree :=
+    match t with
+        leaf _ => Z_leaf
+      | bnode _ z l r => Z_bnode z (gen_to_z l) (gen_to_z r)
+    end.
+
+  Lemma g_z_inv : forall  t : Z_btree, gen_to_z (z_to_gen t) = t.
+  Proof.
+    induction t.
+    simpl; reflexivity.
+    simpl.
+    rewrite IHt1.
+    rewrite IHt2.
+    reflexivity.
+  Qed.
+
+  Lemma z_g_inv : forall  t : btree Z, z_to_gen (gen_to_z t) = t.
+  Proof.
+    induction t.
+    simpl; reflexivity.
+    simpl.
+    rewrite IHt1.
+    rewrite IHt2.
+    reflexivity.
+  Qed.
+
+End ex43.
+
+Section ex645.
+
+  Inductive cmp : Set := Less : cmp | Equal : cmp | Greater : cmp.
+
+  Definition three_way_compare (n m : nat) : cmp :=
+    if n =? m then Equal else if n <=? m then Less else Greater.
+
+  Fixpoint update_primes (n : nat) (l : list (nat * nat)) {struct l} : (list (nat*nat)) * bool :=
+    match l with
+        nil => pair nil false
+      | cons h0 t0 => let t1 := update_primes n t0 in  pair ((if n <? snd h0
+                     then h0
+                     else (pair (fst h0) (snd h0 + fst h0))) :: (fst t1))
+                     (if snd t1 then true else (snd h0 =? n))
+    end.
+
+  Fixpoint prime_sieve (n : nat) : list (nat*nat) :=
+    match n with
+        0 => nil
+      | S 0 => nil
+      | S (S 0) => (pair 2 4) :: nil
+      | S m => let old_p := prime_sieve m in
+              let new_p := update_primes (S m) old_p in
+                if snd new_p then fst new_p
+                  else (pair (S m) (2*S m)) :: fst new_p
+    end.
+
+  Fixpoint gcd a b :=
+    match a with
+     | O => b
+     | S a' => gcd (b mod (S a')) (S a')
+    end.
+
+  Definition rel_nprime (a b:nat) : Prop := gcd a b = 1.
+
+  Inductive nprime (p:nat) : Prop :=
+    prime_intro : 1 < p -> (forall n:nat, 1 <= n < p -> rel_nprime n p) -> nprime p.
+
+  (*
+  Theorem made_all : forall k n : nat, k <= n /\ nprime k -> In k (left_list (prime_sieve n)).
+  Proof.
+    intros k n H0.
+    induction n.
+    simpl.
+    destruct H0 as [H1 H2].
+    elim H2.
+    intros H3 H4.
+    assert (H5 : 1 < 0).
+    apply Nat.lt_le_trans with (n:=1)(m:=k)(p:=0).
+    exact H3. exact H1.
+    elim Nat.nlt_0_r with (n:=1).
+    exact H5.
+    destruct H0 as [H1 H2].
+    elim H2.
+    intros H3 H4.
+    simpl.
+  Qed.
+  *)
+
+End ex645.
+
